@@ -2,21 +2,13 @@
 
 namespace Modules\Report\Commands;
 
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Modules\Report\DTO\UpdateFopDTO;
 use Modules\Report\Enums\ReportTypeEnum;
 use Modules\Report\Jobs\DownloadXMLReportJob;
 use Modules\Report\Services\FopService;
 use Modules\Report\Services\ReportDataValidatorService;
-use Modules\Report\Services\XmlReportService;
-use SimpleXMLElement;
-use Telegram\Bot\Api;
 use Telegram\Bot\Commands\Command;
 use Telegram\Bot\Commands\CommandInterface;
-use Telegram\Bot\FileUpload\InputFile;
-use Telegram\Bot\Objects\Update;
 
 class DownloadCommand extends Command implements CommandInterface
 {
@@ -52,6 +44,7 @@ class DownloadCommand extends Command implements CommandInterface
         $validatedData = $fopDataValidatorService->validate($fop);
 
         if (isset($validatedData['errors'])) {
+            Log::info("eeror " . $validatedData['errors'][0]);
             $this->replyWithMessage([
                 'text' => $validatedData['errors'][0],
             ]);

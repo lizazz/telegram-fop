@@ -12,6 +12,7 @@ use SimpleXMLElement;
 class XmlReportService
 {
     public function __construct(public ReportRepository $reportRepository) {}
+
     public function createReport(Fop $fop): string
     {
         $xml = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><Файл></Файл>');
@@ -60,11 +61,22 @@ class XmlReportService
         $umenNal->addAttribute('СумЗаПг', 2400);
         $umenNal->addAttribute('СумЗа9м', 6000);
         $umenNal->addAttribute('СумЗаНалПер', 11640);
-        Storage::disk('local')->put('xml/'. $fop->fop_id.'.xml', $xml->asXML());
-        $path = Storage::disk('local')->path('xml/'. $fop->fop_id.'.xml');
+        $fileName = 'reports/' . $fop->id . '_' . now()->timestamp . '.xml';
+        $tempPath = storage_path('app/tmp/' . $fileName);
+        $xml->asXML($tempPath);
 
+        try {
+            Storage::disk('s3')->put($fileName, file_get_contents($tempPath), 'public');
 
-        Log::info($path);
-        return $path;
+            if (!Storage::disk('s3')->exists($fileName)) {
+                Log::info('Файл не знайдено на S3 після завантаження.');
+                throw new \RuntimeException('Файл не знайдено на S3 після завантаження.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Помилка завантаження XML на S3: ' . $e->getMessage());
+            throw new \RuntimeException('Не вдалося завантажити XML на S3.');
+        }
+
+        return $fileName;
     }
 }

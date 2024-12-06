@@ -11,6 +11,6 @@ class Fop extends Model
 
     public function report(): HasOne
     {
-        $this->hasOne(Report::class, 'fop_id', 'id');
+        return $this->hasOne(Report::class, 'fop_id', 'id');
     }
 }
